@@ -1,0 +1,31 @@
+{
+  "private": true,
+  "license": "Apache-2.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "jest",
+    "lint:eslint": "eslint .",
+    "fix:eslint": "eslint . --fix",
+    "lint:prettier": "prettier --check .",
+    "fix:prettier": "prettier --write ."
+  },
+  "devDependencies": {
+    "@tsconfig/node12": "^1.0.9",
+    "@types/jest": "^27.0.2",
+    "@typescript-eslint/eslint-plugin": "^5.3.0",
+    "@typescript-eslint/parser": "^5.3.0",
+    "eslint": "^8.2.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-jest": "^25.2.4",
+    "jest": "^27.3.1",
+    "jest-file-snapshot": "^0.5.0",
+    "prettier": "^2.4.1",
+    "ts-jest": "^27.0.7",
+    "typescript": "^4.4.4"
+  },
+  "resolutions": {
+    "@types/node": "^12.0.0"
+  }
+}

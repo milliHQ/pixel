@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  lint-js:
+    name: Lint Type- & JavaScript
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            .yarn
+            **/node_modules
+          key: ${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+
+      - name: Install Dependencies
+        run: yarn --frozen-lockfile --cache-folder .yarn
+
+      - name: Lint Prettier
+        run: yarn lint:prettier
+
+      - name: Lint ESLint
+        run: yarn lint:eslint

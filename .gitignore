@@ -1,0 +1,6 @@
+node_modules
+.DS_STORE
+*.log
+
+# IntelliJ IDEA
+/.idea/
