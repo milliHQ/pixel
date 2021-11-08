@@ -1,7 +1,13 @@
 # Pixel for Next.js
 
+![CI status](https://github.com/milliHQ/pixel/workflows/CI/badge.svg)
+
 Pixel is a small wrapper around Next.js which makes the image optimizer available as a standalone service.
 This way the image optimizer can be scaled independently from the Next.js server.
+
+## Features
+
+- ✅ &nbsp;Works with [sharp](https://github.com/lovell/sharp) or [squoosh](https://github.com/GoogleChromeLabs/squoosh)
 
 ## Implementations
 
