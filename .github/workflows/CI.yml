@@ -21,6 +21,9 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      - name: Verify Node.js version
+        run: node --version
+
       - name: Jest
         run: |
           yarn --frozen-lockfile

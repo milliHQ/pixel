@@ -38,7 +38,8 @@ describe('image-optimizer core', () => {
         requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
-          res.end(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.write(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.end();
         },
       };
       const optimizerParams = new URLSearchParams({
@@ -96,7 +97,8 @@ describe('image-optimizer core', () => {
         requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
-          res.end(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.write(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.end();
         },
       };
       const optimizerParams = new URLSearchParams({
@@ -154,7 +156,8 @@ describe('image-optimizer core', () => {
         requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
-          res.end(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.write(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.end();
         },
         imageConfig: {
           ...imageConfigDefault,
