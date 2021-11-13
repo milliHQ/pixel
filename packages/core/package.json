@@ -1,7 +1,15 @@
 {
   "name": "@millihq/pixel-core",
-  "version": "0.0.0",
+  "version": "1.0.0-canary.0",
+  "main": "./dist/image-optimizer.js",
+  "types": "./dist/image-optimizer.d.ts",
   "license": "Apache-2.0",
+  "homepage": "https://github.com/milliHQ/pixel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/milliHQ/pixel.git",
+    "directory": "packages/core"
+  },
   "scripts": {
     "build": "tsc --project tsconfig.build.json",
     "test": "jest",
@@ -28,5 +36,8 @@
     "sharp": "^0.29.2",
     "supertest": "^6.1.6",
     "typescript": "*"
-  }
+  },
+  "files": [
+    "dist/**"
+  ]
 }
