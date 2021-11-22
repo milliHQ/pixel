@@ -34,6 +34,12 @@ type ImageOptimizerOptions = {
    * https://nextjs.org/docs/api-reference/next/image#configuration-options
    */
   imageConfig?: Omit<ImageConfig, 'loader'> & { loader: 'default' };
+
+  /**
+   * Path where the processed images should be temporarily stored.
+   * Defaults to /tmp.
+   */
+  distDir?: string;
 };
 
 type ImageOptimizerResult = {
@@ -44,9 +50,6 @@ type ImageOptimizerResult = {
 /* -----------------------------------------------------------------------------
  * globals
  * ---------------------------------------------------------------------------*/
-
-// Sets working dir of Next.js to /tmp (Lambda tmp dir)
-const distDir = '/tmp';
 
 let originCacheControl: OriginCacheControl;
 
@@ -80,7 +83,7 @@ async function imageOptimizer(
   parsedUrl: UrlWithParsedQuery,
   options: ImageOptimizerOptions
 ): Promise<ImageOptimizerResult> {
-  const { requestHandler, imageConfig } = options;
+  const { requestHandler, imageConfig, distDir = '/tmp' } = options;
 
   // Create next config mock
   const nextConfig = {
