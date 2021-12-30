@@ -19,6 +19,7 @@ npm i @millihq/pixel-core next react react-dom sharp  # sharp
 ## Usage
 
 ```ts
+import { readFileSync } from 'fs';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import { parse as parseUrl } from 'url';
 
@@ -33,6 +34,11 @@ const options: ImageOptimizerOptions = {
     res.write(readFileSync('my-image.png'));
     res.end();
   },
+  // Customize the behavior of the image optimizer by providing a custom
+  // config, see: https://nextjs.org/docs/api-reference/next/image#advanced
+  imageConfig: {
+    ...
+  }
 };
 
 async function listener(req: IncomingMessage, res: ServerResponse) {
