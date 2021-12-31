@@ -1,7 +1,7 @@
 /* eslint jest/expect-expect: ["error", { "assertFunctionNames": ["expect", "request.**.expect"] }] */
 import { readFileSync } from 'fs';
 import { IncomingMessage, ServerResponse } from 'http';
-import { join as joinPath } from 'path';
+import { join as joinPath, resolve } from 'path';
 
 import express, { Application as ExpressApplication } from 'express';
 import { lookup as lookupMimeType } from 'mime-types';
@@ -9,9 +9,10 @@ import request from 'supertest';
 
 import { pixelExpress } from '../lib/middleware';
 
-jest.setTimeout(60_000);
-
+const PATH_TO_FIXTURES = resolve(__dirname, '../../fixtures');
 const inputFile = 'jpeg/test.jpg';
+
+jest.setTimeout(60_000);
 
 /**
  * Fake requestHandler that reads a predefined fixture from disk and then
@@ -19,7 +20,7 @@ const inputFile = 'jpeg/test.jpg';
 function requestHandlerMock(_req: IncomingMessage, res: ServerResponse) {
   // Read the file from disk
   res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
-  res.write(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+  res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
   res.end();
 }
 

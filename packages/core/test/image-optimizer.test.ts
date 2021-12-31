@@ -1,7 +1,7 @@
 /* eslint jest/expect-expect: ["error", { "assertFunctionNames": ["expect", "request.**.expect"] }] */
 import { readFileSync } from 'fs';
 import http, { IncomingMessage, ServerResponse } from 'http';
-import { join as joinPath } from 'path';
+import { join as joinPath, resolve } from 'path';
 import { parse as parseUrl } from 'url';
 
 import {
@@ -12,6 +12,8 @@ import { imageConfigDefault } from 'next/dist/server/image-config';
 import request from 'supertest';
 
 import { imageOptimizer, ImageOptimizerOptions } from '../lib/image-optimizer';
+
+const PATH_TO_FIXTURES = resolve(__dirname, '../../fixtures');
 
 jest.setTimeout(60_000);
 
@@ -38,7 +40,7 @@ describe('image-optimizer core', () => {
         requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
-          res.write(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
           res.end();
         },
       };
@@ -97,7 +99,7 @@ describe('image-optimizer core', () => {
         requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
-          res.write(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
           res.end();
         },
       };
@@ -156,7 +158,7 @@ describe('image-optimizer core', () => {
         requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
-          res.write(readFileSync(joinPath(__dirname, 'fixtures', inputFile)));
+          res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
           res.end();
         },
         imageConfig: {
