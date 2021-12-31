@@ -14,7 +14,7 @@ This way the image optimizer can be scaled independently from the Next.js server
 - Docker image  
   Coming soon.
 
-- [express middleware](https://github.com/milliHQ/pixel/tree/main/packages/express-middleware)  
+- [express middleware](https://github.com/milliHQ/pixel/tree/main/packages/express)  
   Use the image optimizer in an express application by applying the middleware.
 
 - Fastify middleware  
