@@ -6,15 +6,15 @@ Useful when you want to provide the image optimizer of Next.js as standalone API
 
 ## Installation
 
-Install the package `@millihq/pixel-middleware-express` with your favorite package manager.  
+Install the package `@millihq/pixel-express` with your favorite package manager.  
 You also need to install [`next`](https://www.npmjs.com/package/next) and its peer dependencies [`react`](https://www.npmjs.com/package/react) and [`react-dom`](https://www.npmjs.com/package/react-dom).
 
 By default [squoosh](https://github.com/GoogleChromeLabs/squoosh) is used as image optimization engine (Next.js default).  
 If you want to use [sharp](https://github.com/lovell/sharp) instead, you have to install it as an additional dependency.
 
 ```sh
-npm i @millihq/pixel-middleware-express next react react-dom        # squoosh
-npm i @millihq/pixel-middleware-express next react react-dom sharp  # sharp
+npm i @millihq/pixel-express next react react-dom        # squoosh
+npm i @millihq/pixel-express next react react-dom sharp  # sharp
 ```
 
 ## Usage
