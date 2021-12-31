@@ -14,7 +14,13 @@ This way the image optimizer can be scaled independently from the Next.js server
 - Docker image  
   Coming soon.
 
-- Express/Koa/Fastify middleware  
+- [express middleware](https://github.com/milliHQ/pixel/tree/main/packages/express-middleware)  
+  Use the image optimizer in an express application by applying the middleware.
+
+- Fastify middleware  
+  Coming soon.
+
+- Koa middleware  
   Coming soon.
 
 - [AWS Lambda / Terraform](https://github.com/milliHQ/terraform-aws-next-js-image-optimization)  
