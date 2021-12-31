@@ -41,8 +41,13 @@ function middlewareInitializer(
       );
     }
 
-    await imageOptimizer(req, res, parseUrl(req.url, true), options);
-    next();
+    try {
+      // res.end() is called internally so no need to call next() after the
+      // image optimizer is finished.
+      await imageOptimizer(req, res, parseUrl(req.url, true), options);
+    } catch (error) {
+      next(error);
+    }
   };
 }
 
