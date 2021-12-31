@@ -9,7 +9,7 @@ import request from 'supertest';
 
 import { pixelExpress } from '../lib/middleware';
 
-const PATH_TO_FIXTURES = resolve(__dirname, '../../fixtures');
+const PATH_TO_FIXTURES = resolve(__dirname, '../../../fixtures');
 const inputFile = 'jpeg/test.jpg';
 
 jest.setTimeout(60_000);

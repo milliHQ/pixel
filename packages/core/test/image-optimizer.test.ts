@@ -13,7 +13,7 @@ import request from 'supertest';
 
 import { imageOptimizer, ImageOptimizerOptions } from '../lib/image-optimizer';
 
-const PATH_TO_FIXTURES = resolve(__dirname, '../../fixtures');
+const PATH_TO_FIXTURES = resolve(__dirname, '../../../fixtures');
 
 jest.setTimeout(60_000);
 
