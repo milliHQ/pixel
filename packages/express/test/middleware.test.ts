@@ -17,7 +17,7 @@ jest.setTimeout(60_000);
 /**
  * Fake requestHandler that reads a predefined fixture from disk and then
  */
-function requestHandlerMock(_req: IncomingMessage, res: ServerResponse) {
+async function requestHandlerMock(_req: IncomingMessage, res: ServerResponse) {
   // Read the file from disk
   res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
   res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));

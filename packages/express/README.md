@@ -30,7 +30,7 @@ const app = express();
 app.get(
   '/next/image',
   pixelExpress({
-    requestHandler(req, res) {
+    async requestHandler(req, res) {
       // Load images here that are requested from an absolute path, e.g.
       //
       // /my-image.png
