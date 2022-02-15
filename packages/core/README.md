@@ -26,7 +26,7 @@ import { parse as parseUrl } from 'url';
 import { imageOptimizer, ImageOptimizerOptions } from '@millihq/pixel-core';
 
 const options: ImageOptimizerOptions = {
-  requestHandler(req, res) {
+  async requestHandler(req, res) {
     // Load images here that are requested from an absolute path, e.g.
     //
     // /my-image.png
