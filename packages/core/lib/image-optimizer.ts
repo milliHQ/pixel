@@ -4,7 +4,7 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { ImageConfig } from 'next/dist/server/image-config';
 import { NextConfig } from 'next/dist/server/config';
 import { imageOptimizer as nextImageOptimizer } from 'next/dist/server/image-optimizer';
-import Server from 'next/dist/server/next-server';
+import { NextUrlWithParsedQuery } from 'next/dist/server/request-meta';
 import nodeFetch from 'node-fetch';
 
 /* -----------------------------------------------------------------------------
@@ -25,8 +25,8 @@ type ImageOptimizerOptions = {
   requestHandler: (
     req: IncomingMessage,
     res: ServerResponse,
-    url: UrlWithParsedQuery
-  ) => void | Promise<void>;
+    url?: NextUrlWithParsedQuery
+  ) => Promise<void>;
 
   /**
    * The Next.js image configuration object.
@@ -90,18 +90,19 @@ async function imageOptimizer(
     images: imageConfig,
   } as unknown as NextConfig;
 
-  // Create Next.js server mock
-  const server = {
-    getRequestHandler: () => requestHandler,
-  } as Server;
+  // Dummy for unused 404 renderer
+  const render404 = async () => {
+    return;
+  };
 
   const result = await nextImageOptimizer(
-    server,
     req,
     res,
     parsedUrl,
     nextConfig,
-    distDir
+    distDir,
+    render404,
+    requestHandler
   );
 
   return {

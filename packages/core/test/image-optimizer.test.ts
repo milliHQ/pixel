@@ -38,7 +38,7 @@ describe('image-optimizer core', () => {
     // @ts-ignore - Types from jest are not correct here
     async (inputFile: string, outputContentType: string) => {
       const options: ImageOptimizerOptions = {
-        requestHandler(_req, res) {
+        async requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
           res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
@@ -98,7 +98,7 @@ describe('image-optimizer core', () => {
     // @ts-ignore - Types from jest are not correct here
     async (inputFile: string, outputContentType: string) => {
       const options: ImageOptimizerOptions = {
-        requestHandler(_req, res) {
+        async requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
           res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
@@ -158,7 +158,7 @@ describe('image-optimizer core', () => {
     // @ts-ignore - Types from jest are not correct here
     async (inputFile: string, outputContentType: string) => {
       const options: ImageOptimizerOptions = {
-        requestHandler(_req, res) {
+        async requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
           res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
