@@ -11,7 +11,7 @@ import {
 import { imageConfigDefault } from 'next/dist/server/image-config';
 import request from 'supertest';
 
-import { imageOptimizer, ImageOptimizerOptions } from '../lib/image-optimizer';
+import { Pixel } from '../lib/image-optimizer';
 
 const PATH_TO_FIXTURES = resolve(__dirname, '../../../fixtures');
 
@@ -37,14 +37,20 @@ describe('image-optimizer core', () => {
     'Accept all: %s should convert to %s',
     // @ts-ignore - Types from jest are not correct here
     async (inputFile: string, outputContentType: string) => {
-      const options: ImageOptimizerOptions = {
+      const pixel = new Pixel({
         async requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
           res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
           res.end();
         },
-      };
+        imageConfig: {
+          loader: 'default',
+          dangerouslyAllowSVG: true,
+          contentSecurityPolicy:
+            "default-src 'self'; script-src 'none'; sandbox;",
+        },
+      });
       const optimizerParams = new URLSearchParams({
         url: `/${inputFile}`,
         w: '128',
@@ -55,7 +61,7 @@ describe('image-optimizer core', () => {
         // Risk tolerable since it is used in test environment
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const url = parseUrl(req.url!, true);
-        await imageOptimizer(req, res, url, options);
+        await pixel.imageOptimizer(req, res, url);
       }
       const server = http.createServer(listener);
 
@@ -97,14 +103,20 @@ describe('image-optimizer core', () => {
     'Accept webp: %s should convert to %s',
     // @ts-ignore - Types from jest are not correct here
     async (inputFile: string, outputContentType: string) => {
-      const options: ImageOptimizerOptions = {
+      const pixel = new Pixel({
         async requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
           res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
           res.end();
         },
-      };
+        imageConfig: {
+          loader: 'default',
+          dangerouslyAllowSVG: true,
+          contentSecurityPolicy:
+            "default-src 'self'; script-src 'none'; sandbox;",
+        },
+      });
       const optimizerParams = new URLSearchParams({
         url: `/${inputFile}`,
         w: '128',
@@ -115,7 +127,7 @@ describe('image-optimizer core', () => {
         // Risk tolerable since it is used in test environment
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const url = parseUrl(req.url!, true);
-        await imageOptimizer(req, res, url, options);
+        await pixel.imageOptimizer(req, res, url);
       }
       const server = http.createServer(listener);
 
@@ -157,7 +169,7 @@ describe('image-optimizer core', () => {
     'Accept avif: %s should convert to %s',
     // @ts-ignore - Types from jest are not correct here
     async (inputFile: string, outputContentType: string) => {
-      const options: ImageOptimizerOptions = {
+      const pixel = new Pixel({
         async requestHandler(_req, res) {
           // Read the file from disk
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
@@ -168,8 +180,11 @@ describe('image-optimizer core', () => {
           ...imageConfigDefault,
           loader: 'default',
           formats: ['image/avif', 'image/webp'],
+          dangerouslyAllowSVG: true,
+          contentSecurityPolicy:
+            "default-src 'self'; script-src 'none'; sandbox;",
         },
-      };
+      });
       const optimizerParams = new URLSearchParams({
         url: `/${inputFile}`,
         w: '128',
@@ -180,7 +195,7 @@ describe('image-optimizer core', () => {
         // Risk tolerable since it is used in test environment
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const url = parseUrl(req.url!, true);
-        await imageOptimizer(req, res, url, options);
+        await pixel.imageOptimizer(req, res, url);
       }
       const server = http.createServer(listener);
 

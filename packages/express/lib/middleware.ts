@@ -1,7 +1,7 @@
 import * as http from 'http';
 import { parse as parseUrl } from 'url';
 
-import { imageOptimizer, ImageOptimizerOptions } from '@millihq/pixel-core';
+import { Pixel, PixelOptions } from '@millihq/pixel-core';
 
 type NextFunction = {
   (err?: any): void;
@@ -29,9 +29,9 @@ type MiddlewareFunction = (
  * @param options
  * @returns
  */
-function middlewareInitializer(
-  options: ImageOptimizerOptions
-): MiddlewareFunction {
+function middlewareInitializer(options: PixelOptions): MiddlewareFunction {
+  const pixel = new Pixel(options);
+
   return async (req, res, next) => {
     if (typeof req.url !== 'string') {
       return next(
@@ -44,12 +44,12 @@ function middlewareInitializer(
     try {
       // res.end() is called internally so no need to call next() after the
       // image optimizer is finished.
-      await imageOptimizer(req, res, parseUrl(req.url, true), options);
+      await pixel.imageOptimizer(req, res, parseUrl(req.url, true));
     } catch (error) {
       next(error);
     }
   };
 }
 
-export type { ImageOptimizerOptions as PixelExpressOptions };
+export type { PixelOptions as PixelExpressOptions };
 export { middlewareInitializer as pixelExpress };

@@ -1,10 +1,21 @@
-import { UrlWithParsedQuery } from 'url';
 import { IncomingMessage, ServerResponse } from 'http';
+import { UrlWithParsedQuery } from 'url';
 
 import { ImageConfig } from 'next/dist/server/image-config';
-import { NextConfig } from 'next/dist/server/config';
-import { imageOptimizer as nextImageOptimizer } from 'next/dist/server/image-optimizer';
+import {
+  imageOptimizer as nextImageOptimizer,
+  ImageOptimizerCache,
+  sendResponse,
+  getHash,
+  ImageError,
+} from 'next/dist/server/image-optimizer';
+import { getExtension } from 'next/dist/server/serve-static';
 import { NextUrlWithParsedQuery } from 'next/dist/server/request-meta';
+import {
+  defaultConfig,
+  NextConfigComplete,
+} from 'next/dist/server/config-shared';
+import ResponseCache from 'next/dist/server/response-cache';
 import nodeFetch from 'node-fetch';
 
 /* -----------------------------------------------------------------------------
@@ -15,18 +26,20 @@ type NodeFetch = typeof nodeFetch;
 
 type OriginCacheControl = string | null;
 
-type ImageOptimizerOptions = {
+type RequestHandler = (
+  req: IncomingMessage,
+  res: ServerResponse,
+  url?: NextUrlWithParsedQuery
+) => Promise<void>;
+
+type PixelOptions = {
   /**
    * Handler that is called for absolute URIs, e.g. `/my/image.png`.
    * You can implement custom fetch logic here, such as downloading the image
    * from a custom file server etc.
    * The result should be written back as stream using res.end(<buffer>).
    */
-  requestHandler: (
-    req: IncomingMessage,
-    res: ServerResponse,
-    url?: NextUrlWithParsedQuery
-  ) => Promise<void>;
+  requestHandler: RequestHandler;
 
   /**
    * The Next.js image configuration object.
@@ -43,8 +56,8 @@ type ImageOptimizerOptions = {
 };
 
 type ImageOptimizerResult = {
+  originCacheControl?: OriginCacheControl;
   finished: boolean;
-  originCacheControl: OriginCacheControl;
 };
 
 /* -----------------------------------------------------------------------------
@@ -74,42 +87,131 @@ fetchPolyfill.isRedirect = nodeFetch.isRedirect;
 global.fetch = fetchPolyfill;
 
 /* -----------------------------------------------------------------------------
- * imageOptimizer
+ * Pixel
  * ---------------------------------------------------------------------------*/
 
-async function imageOptimizer(
-  req: IncomingMessage,
-  res: ServerResponse,
-  parsedUrl: UrlWithParsedQuery,
-  options: ImageOptimizerOptions
-): Promise<ImageOptimizerResult> {
-  const { requestHandler, imageConfig, distDir = '/tmp' } = options;
+const defaultImageConfig = defaultConfig.images;
 
-  // Create next config mock
-  const nextConfig = {
-    images: imageConfig,
-  } as unknown as NextConfig;
+class Pixel {
+  /**
+   * Directory where the images should be saved to.
+   */
+  distDir: string;
+  /**
+   * Instance of local image caching service.
+   */
+  imageResponseCache: ResponseCache;
+  /**
+   * Next.js config object that is forwarded to the image optimizer.
+   */
+  nextConfig: NextConfigComplete;
+  /**
+   * Request handler that is called to retrieve images for absolute URIs.
+   */
+  requestHandler: RequestHandler;
 
-  // Dummy for unused 404 renderer
-  const render404 = async () => {
-    return;
-  };
+  constructor(options: PixelOptions) {
+    this.distDir = options.distDir ?? '/tmp';
 
-  const result = await nextImageOptimizer(
-    req,
-    res,
-    parsedUrl,
-    nextConfig,
-    distDir,
-    render404,
-    requestHandler
-  );
+    // Create next config mock
+    this.nextConfig = {
+      images:
+        {
+          ...defaultImageConfig,
+          ...options.imageConfig,
+        } ?? defaultImageConfig,
+    } as unknown as NextConfigComplete;
 
-  return {
-    ...result,
-    originCacheControl,
-  };
+    this.imageResponseCache = new ResponseCache(
+      new ImageOptimizerCache({
+        distDir: this.distDir,
+        nextConfig: this.nextConfig,
+      })
+    );
+
+    this.requestHandler = options.requestHandler;
+  }
+
+  async imageOptimizer(
+    req: IncomingMessage,
+    res: ServerResponse,
+    parsedUrl: UrlWithParsedQuery
+  ): Promise<ImageOptimizerResult> {
+    const paramsResult = ImageOptimizerCache.validateParams(
+      req,
+      parsedUrl.query,
+      this.nextConfig,
+      false
+    );
+
+    if ('errorMessage' in paramsResult) {
+      res.statusCode = 400;
+      res.end(paramsResult.errorMessage);
+      return { finished: true };
+    }
+
+    const cacheKey = ImageOptimizerCache.getCacheKey(paramsResult);
+
+    try {
+      const cacheEntry = await this.imageResponseCache.get(
+        cacheKey,
+        async () => {
+          const { buffer, contentType, maxAge } = await nextImageOptimizer(
+            req,
+            res,
+            paramsResult,
+            this.nextConfig,
+            this.requestHandler
+          );
+          const etag = getHash([buffer]);
+
+          return {
+            value: {
+              kind: 'IMAGE',
+              buffer,
+              etag,
+              extension: getExtension(contentType) as string,
+            },
+            revalidate: maxAge,
+          };
+        },
+        {}
+      );
+
+      if (cacheEntry?.value?.kind !== 'IMAGE') {
+        throw new Error(
+          'invariant did not get entry from image response cache'
+        );
+      }
+
+      sendResponse(
+        req,
+        res,
+        paramsResult.href,
+        cacheEntry.value.extension,
+        cacheEntry.value.buffer,
+        paramsResult.isStatic,
+        cacheEntry.isMiss ? 'MISS' : cacheEntry.isStale ? 'STALE' : 'HIT',
+        this.nextConfig.images.contentSecurityPolicy
+      );
+    } catch (error) {
+      if (error instanceof ImageError) {
+        res.statusCode = error.statusCode;
+        res.end(error.message);
+        return {
+          finished: true,
+        };
+      }
+
+      throw error;
+    }
+
+    return {
+      originCacheControl,
+      finished: true,
+    };
+  }
 }
 
-export type { ImageOptimizerOptions };
-export { imageOptimizer };
+export type { PixelOptions };
+export { Pixel };
