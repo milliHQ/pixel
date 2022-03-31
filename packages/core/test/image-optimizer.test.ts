@@ -8,12 +8,13 @@ import {
   lookup as lookupMimeType,
   extension as extensionMimeType,
 } from 'mime-types';
-import { imageConfigDefault } from 'next/dist/server/image-config';
+import { defaultConfig } from 'next/dist/server/config-shared';
 import request from 'supertest';
 
 import { Pixel } from '../lib/image-optimizer';
 
 const PATH_TO_FIXTURES = resolve(__dirname, '../../../fixtures');
+const imageConfigDefault = defaultConfig.images;
 
 jest.setTimeout(60_000);
 

@@ -1,7 +1,6 @@
 import { IncomingMessage, ServerResponse } from 'http';
 import { UrlWithParsedQuery } from 'url';
 
-import { ImageConfig } from 'next/dist/server/image-config';
 import {
   imageOptimizer as nextImageOptimizer,
   ImageOptimizerCache,
@@ -21,6 +20,8 @@ import nodeFetch from 'node-fetch';
 /* -----------------------------------------------------------------------------
  * Types
  * ---------------------------------------------------------------------------*/
+
+type ImageConfig = Partial<NextConfigComplete['images']>;
 
 type NodeFetch = typeof nodeFetch;
 
