@@ -41,4 +41,4 @@ jobs:
           node-version: 16
 
       - name: Build
-          run: yarn build
+        run: yarn build
