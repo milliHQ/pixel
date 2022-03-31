@@ -18,14 +18,16 @@ npm i @millihq/pixel-core next react react-dom sharp  # sharp
 
 ## Usage
 
+Pixel can be integrated with the standard Node.js HTTP request and response model.
+
 ```ts
 import { readFileSync } from 'fs';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import { parse as parseUrl } from 'url';
 
-import { imageOptimizer, ImageOptimizerOptions } from '@millihq/pixel-core';
+import { Pixel } from '@millihq/pixel-core';
 
-const options: ImageOptimizerOptions = {
+const pixel = new Pixel({
   async requestHandler(req, res) {
     // Load images here that are requested from an absolute path, e.g.
     //
@@ -38,12 +40,12 @@ const options: ImageOptimizerOptions = {
   // config, see: https://nextjs.org/docs/api-reference/next/image#advanced
   imageConfig: {
     ...
-  }
-};
+  },
+});
 
 async function listener(req: IncomingMessage, res: ServerResponse) {
   const url = parseUrl(req.url!, true);
-  await imageOptimizer(req, res, url, options);
+  await pixel.imageOptimizer(req, res, url);
 }
 
 const server = http.createServer(listener);

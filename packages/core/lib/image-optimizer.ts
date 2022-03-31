@@ -1,15 +1,22 @@
 import { IncomingMessage, ServerResponse } from 'http';
+import { UrlWithParsedQuery } from 'url';
 
 import { ImageConfig } from 'next/dist/server/image-config';
 import {
   imageOptimizer as nextImageOptimizer,
   ImageOptimizerCache,
+  sendResponse,
+  getHash,
+  ImageError,
 } from 'next/dist/server/image-optimizer';
+import { getExtension } from 'next/dist/server/serve-static';
 import { NextUrlWithParsedQuery } from 'next/dist/server/request-meta';
-import { NextConfigComplete } from 'next/dist/server/config-shared';
+import {
+  defaultConfig,
+  NextConfigComplete,
+} from 'next/dist/server/config-shared';
+import ResponseCache from 'next/dist/server/response-cache';
 import nodeFetch from 'node-fetch';
-import { UrlWithParsedQuery } from 'url';
-import { defaultConfig } from 'next/dist/server/config-shared';
 
 /* -----------------------------------------------------------------------------
  * Types
@@ -49,7 +56,8 @@ type PixelOptions = {
 };
 
 type ImageOptimizerResult = {
-  originCacheControl: OriginCacheControl;
+  originCacheControl?: OriginCacheControl;
+  finished: boolean;
 };
 
 /* -----------------------------------------------------------------------------
@@ -92,7 +100,7 @@ class Pixel {
   /**
    * Instance of local image caching service.
    */
-  // imageResponseCache: ResponseCache;
+  imageResponseCache: ResponseCache;
   /**
    * Next.js config object that is forwarded to the image optimizer.
    */
@@ -114,12 +122,12 @@ class Pixel {
         } ?? defaultImageConfig,
     } as unknown as NextConfigComplete;
 
-    // this.imageResponseCache = new ResponseCache(
-    //   new ImageOptimizerCache({
-    //     distDir: this.distDir,
-    //     nextConfig: this.nextConfig,
-    //   })
-    // );
+    this.imageResponseCache = new ResponseCache(
+      new ImageOptimizerCache({
+        distDir: this.distDir,
+        nextConfig: this.nextConfig,
+      })
+    );
 
     this.requestHandler = options.requestHandler;
   }
@@ -137,24 +145,70 @@ class Pixel {
     );
 
     if ('errorMessage' in paramsResult) {
-      throw new Error(paramsResult.errorMessage);
+      res.statusCode = 400;
+      res.end(paramsResult.errorMessage);
+      return { finished: true };
     }
 
-    const result = await nextImageOptimizer(
-      req,
-      res,
-      paramsResult,
-      this.nextConfig,
-      this.requestHandler
-    );
+    const cacheKey = ImageOptimizerCache.getCacheKey(paramsResult);
 
-    // Write response
-    res.setHeader('Content-Type', result.contentType);
-    res.setHeader('Cache-Control', `max-age: ${result.maxAge}`);
-    res.end(result.buffer);
+    try {
+      const cacheEntry = await this.imageResponseCache.get(
+        cacheKey,
+        async () => {
+          const { buffer, contentType, maxAge } = await nextImageOptimizer(
+            req,
+            res,
+            paramsResult,
+            this.nextConfig,
+            this.requestHandler
+          );
+          const etag = getHash([buffer]);
+
+          return {
+            value: {
+              kind: 'IMAGE',
+              buffer,
+              etag,
+              extension: getExtension(contentType) as string,
+            },
+            revalidate: maxAge,
+          };
+        },
+        {}
+      );
+
+      if (cacheEntry?.value?.kind !== 'IMAGE') {
+        throw new Error(
+          'invariant did not get entry from image response cache'
+        );
+      }
+
+      sendResponse(
+        req,
+        res,
+        paramsResult.href,
+        cacheEntry.value.extension,
+        cacheEntry.value.buffer,
+        paramsResult.isStatic,
+        cacheEntry.isMiss ? 'MISS' : cacheEntry.isStale ? 'STALE' : 'HIT',
+        this.nextConfig.images.contentSecurityPolicy
+      );
+    } catch (error) {
+      if (error instanceof ImageError) {
+        res.statusCode = error.statusCode;
+        res.end(error.message);
+        return {
+          finished: true,
+        };
+      }
+
+      throw error;
+    }
 
     return {
       originCacheControl,
+      finished: true,
     };
   }
 }

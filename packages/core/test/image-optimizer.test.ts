@@ -29,7 +29,7 @@ describe('image-optimizer core', () => {
     ['gif/animated.gif', 'image/gif'],
     ['jpeg/test.jpg', 'image/jpeg'],
     ['png/test.png', 'image/png'],
-    // ['svg/test.svg', 'image/svg+xml'],
+    ['svg/test.svg', 'image/svg+xml'],
     ['tiff/test.tiff', 'image/tiff'],
     ['webp/test.webp', 'image/webp'],
     ['webp/animated.webp', 'image/webp'],
@@ -43,6 +43,12 @@ describe('image-optimizer core', () => {
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
           res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
           res.end();
+        },
+        imageConfig: {
+          loader: 'default',
+          dangerouslyAllowSVG: true,
+          contentSecurityPolicy:
+            "default-src 'self'; script-src 'none'; sandbox;",
         },
       });
       const optimizerParams = new URLSearchParams({
@@ -89,7 +95,7 @@ describe('image-optimizer core', () => {
     ['gif/animated.gif', 'image/gif'],
     ['jpeg/test.jpg', 'image/webp'],
     ['png/test.png', 'image/webp'],
-    // ['svg/test.svg', 'image/svg+xml'],
+    ['svg/test.svg', 'image/svg+xml'],
     ['tiff/test.tiff', 'image/webp'],
     ['webp/test.webp', 'image/webp'],
     ['webp/animated.webp', 'image/webp'],
@@ -103,6 +109,12 @@ describe('image-optimizer core', () => {
           res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
           res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
           res.end();
+        },
+        imageConfig: {
+          loader: 'default',
+          dangerouslyAllowSVG: true,
+          contentSecurityPolicy:
+            "default-src 'self'; script-src 'none'; sandbox;",
         },
       });
       const optimizerParams = new URLSearchParams({
@@ -149,7 +161,7 @@ describe('image-optimizer core', () => {
     ['gif/animated.gif', 'image/gif'],
     ['jpeg/test.jpg', 'image/avif'],
     ['png/test.png', 'image/avif'],
-    // ['svg/test.svg', 'image/svg+xml'],
+    ['svg/test.svg', 'image/svg+xml'],
     ['tiff/test.tiff', 'image/avif'],
     ['webp/test.webp', 'image/avif'],
     ['webp/animated.webp', 'image/webp'],
@@ -168,6 +180,9 @@ describe('image-optimizer core', () => {
           ...imageConfigDefault,
           loader: 'default',
           formats: ['image/avif', 'image/webp'],
+          dangerouslyAllowSVG: true,
+          contentSecurityPolicy:
+            "default-src 'self'; script-src 'none'; sandbox;",
         },
       });
       const optimizerParams = new URLSearchParams({
