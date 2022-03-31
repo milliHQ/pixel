@@ -1,5 +1,10 @@
 # Changelog of Pixel Core
 
+## 3.0.0 (March 31, 2022)
+
+- Adds support for Next.js versions `>= 12.1.0`.  
+  For older versions of Next.js please use the `v2.x.x` version of this package.
+
 ## 2.0.0 (February 17, 2022)
 
 - Adds support for Next.js versions `>= 12.0.9`.  
