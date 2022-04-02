@@ -6,6 +6,7 @@ import { join as joinPath, resolve } from 'path';
 import express, { Application as ExpressApplication } from 'express';
 import { lookup as lookupMimeType } from 'mime-types';
 import request from 'supertest';
+import { dirSync, DirResult } from 'tmp';
 
 import { pixelExpress } from '../lib/middleware';
 
@@ -26,13 +27,19 @@ async function requestHandlerMock(_req: IncomingMessage, res: ServerResponse) {
 
 describe('image-optimizer express middleware', () => {
   let app: ExpressApplication;
+  let tmpDir: DirResult;
 
   beforeAll(() => {
+    tmpDir = dirSync({
+      unsafeCleanup: true,
+    });
+
     app = express();
     app.get(
       '/next/image',
       pixelExpress({
         requestHandler: requestHandlerMock,
+        distDir: tmpDir.name,
       })
     );
   });

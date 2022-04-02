@@ -18,6 +18,31 @@ const imageConfigDefault = defaultConfig.images;
 
 jest.setTimeout(60_000);
 
+/* -----------------------------------------------------------------------------
+ * Utils
+ * ---------------------------------------------------------------------------*/
+
+function generateListener(pixel: Pixel) {
+  return async (req: IncomingMessage, res: ServerResponse) => {
+    // Risk tolerable since it is used in test environment
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const url = parseUrl(req.url!, true);
+    const result = await pixel.imageOptimizer(req, res, url);
+
+    // Error handling
+    if ('error' in result) {
+      res.statusCode = result.statusCode;
+      res.end(result.error);
+      return;
+    }
+
+    // Return processed image
+    res.setHeader('Content-Type', result.contentType);
+    res.setHeader('Cache-Control', `public, max-age=${result.maxAge}`);
+    res.end(result.buffer);
+  };
+}
+
 describe('image-optimizer core', () => {
   /* ---------------------------------------------------------------------------
    * Accept all
@@ -58,13 +83,7 @@ describe('image-optimizer core', () => {
         q: '75',
       });
 
-      async function listener(req: IncomingMessage, res: ServerResponse) {
-        // Risk tolerable since it is used in test environment
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const url = parseUrl(req.url!, true);
-        await pixel.imageOptimizer(req, res, url);
-      }
-      const server = http.createServer(listener);
+      const server = http.createServer(generateListener(pixel));
 
       const response = await request(server)
         .get(`/?${optimizerParams.toString()}`)
@@ -124,13 +143,7 @@ describe('image-optimizer core', () => {
         q: '75',
       });
 
-      async function listener(req: IncomingMessage, res: ServerResponse) {
-        // Risk tolerable since it is used in test environment
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const url = parseUrl(req.url!, true);
-        await pixel.imageOptimizer(req, res, url);
-      }
-      const server = http.createServer(listener);
+      const server = http.createServer(generateListener(pixel));
 
       const response = await request(server)
         .get(`/?${optimizerParams.toString()}`)
@@ -192,13 +205,7 @@ describe('image-optimizer core', () => {
         q: '75',
       });
 
-      async function listener(req: IncomingMessage, res: ServerResponse) {
-        // Risk tolerable since it is used in test environment
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const url = parseUrl(req.url!, true);
-        await pixel.imageOptimizer(req, res, url);
-      }
-      const server = http.createServer(listener);
+      const server = http.createServer(generateListener(pixel));
 
       const response = await request(server)
         .get(`/?${optimizerParams.toString()}`)
@@ -218,4 +225,40 @@ describe('image-optimizer core', () => {
       );
     }
   );
+
+  test('Get Cache-Control header from requestHandler', async () => {
+    const cacheControlHeader = 'public, max-age=123456';
+    const inputFile = 'jpeg/test.jpg';
+
+    const pixel = new Pixel({
+      async requestHandler(_req, res) {
+        // Read the file from disk
+        res.setHeader('Content-Type', lookupMimeType(inputFile) as string);
+        res.setHeader('Cache-Control', cacheControlHeader);
+        res.write(readFileSync(joinPath(PATH_TO_FIXTURES, inputFile)));
+        res.end();
+      },
+      imageConfig: {
+        loader: 'default',
+        dangerouslyAllowSVG: true,
+        contentSecurityPolicy:
+          "default-src 'self'; script-src 'none'; sandbox;",
+      },
+    });
+
+    const optimizerParams = new URLSearchParams({
+      url: `/${inputFile}`,
+      w: '128',
+      q: '75',
+    });
+
+    const server = http.createServer(generateListener(pixel));
+
+    await request(server)
+      .get(`/?${optimizerParams.toString()}`)
+      .set('Accept', 'image/webp,*/*')
+      .expect('Content-Type', 'image/webp')
+      .expect('Cache-Control', cacheControlHeader)
+      .expect(200);
+  });
 });
