@@ -4,17 +4,14 @@ import { UrlWithParsedQuery } from 'url';
 import {
   imageOptimizer as nextImageOptimizer,
   ImageOptimizerCache,
-  sendResponse,
-  getHash,
   ImageError,
+  ImageParamsResult,
 } from 'next/dist/server/image-optimizer';
-import { getExtension } from 'next/dist/server/serve-static';
 import { NextUrlWithParsedQuery } from 'next/dist/server/request-meta';
 import {
   defaultConfig,
   NextConfigComplete,
 } from 'next/dist/server/config-shared';
-import ResponseCache from 'next/dist/server/response-cache';
 import nodeFetch from 'node-fetch';
 
 /* -----------------------------------------------------------------------------
@@ -23,15 +20,22 @@ import nodeFetch from 'node-fetch';
 
 type ImageConfig = Partial<NextConfigComplete['images']>;
 
-type NodeFetch = typeof nodeFetch;
-
-type OriginCacheControl = string | null;
-
 type RequestHandler = (
   req: IncomingMessage,
   res: ServerResponse,
   url?: NextUrlWithParsedQuery
 ) => Promise<void>;
+
+type PixelResponse =
+  | {
+      buffer: Buffer;
+      contentType: string;
+      maxAge: number;
+    }
+  | {
+      error: string;
+      statusCode: number;
+    };
 
 type PixelOptions = {
   /**
@@ -48,44 +52,17 @@ type PixelOptions = {
    * https://nextjs.org/docs/api-reference/next/image#configuration-options
    */
   imageConfig?: Omit<ImageConfig, 'loader'> & { loader: 'default' };
-
-  /**
-   * Path where the processed images should be temporarily stored.
-   * Defaults to /tmp.
-   */
-  distDir?: string;
-};
-
-type ImageOptimizerResult = {
-  originCacheControl?: OriginCacheControl;
-  finished: boolean;
 };
 
 /* -----------------------------------------------------------------------------
  * globals
  * ---------------------------------------------------------------------------*/
 
-let originCacheControl: OriginCacheControl;
-
-/**
- * fetch polyfill to intercept the request to the external resource
- * to get the Cache-Control header from the origin
- */
-const fetchPolyfill: NodeFetch = (url, init) => {
-  return nodeFetch(url, init).then((result) => {
-    originCacheControl = result.headers.get('Cache-Control');
-    return result;
-  });
-};
-
-// @ts-ignore
-fetchPolyfill.isRedirect = nodeFetch.isRedirect;
-
 // Polyfill for fetch that is used by nextImageOptimizer
 // https://github.com/vercel/next.js/blob/canary/packages/next/server/image-optimizer.ts#L223
 
 // @ts-ignore
-global.fetch = fetchPolyfill;
+global.fetch = nodeFetch;
 
 /* -----------------------------------------------------------------------------
  * Pixel
@@ -94,14 +71,6 @@ global.fetch = fetchPolyfill;
 const defaultImageConfig = defaultConfig.images;
 
 class Pixel {
-  /**
-   * Directory where the images should be saved to.
-   */
-  distDir: string;
-  /**
-   * Instance of local image caching service.
-   */
-  imageResponseCache: ResponseCache;
   /**
    * Next.js config object that is forwarded to the image optimizer.
    */
@@ -112,8 +81,6 @@ class Pixel {
   requestHandler: RequestHandler;
 
   constructor(options: PixelOptions) {
-    this.distDir = options.distDir ?? '/tmp';
-
     // Create next config mock
     this.nextConfig = {
       images:
@@ -123,94 +90,47 @@ class Pixel {
         } ?? defaultImageConfig,
     } as unknown as NextConfigComplete;
 
-    this.imageResponseCache = new ResponseCache(
-      new ImageOptimizerCache({
-        distDir: this.distDir,
-        nextConfig: this.nextConfig,
-      })
-    );
-
     this.requestHandler = options.requestHandler;
   }
 
   async imageOptimizer(
     req: IncomingMessage,
     res: ServerResponse,
-    parsedUrl: UrlWithParsedQuery
-  ): Promise<ImageOptimizerResult> {
-    const paramsResult = ImageOptimizerCache.validateParams(
-      req,
-      parsedUrl.query,
-      this.nextConfig,
-      false
-    );
-
-    if ('errorMessage' in paramsResult) {
-      res.statusCode = 400;
-      res.end(paramsResult.errorMessage);
-      return { finished: true };
-    }
-
-    const cacheKey = ImageOptimizerCache.getCacheKey(paramsResult);
-
-    try {
-      const cacheEntry = await this.imageResponseCache.get(
-        cacheKey,
-        async () => {
-          const { buffer, contentType, maxAge } = await nextImageOptimizer(
-            req,
-            res,
-            paramsResult,
-            this.nextConfig,
-            this.requestHandler
-          );
-          const etag = getHash([buffer]);
-
-          return {
-            value: {
-              kind: 'IMAGE',
-              buffer,
-              etag,
-              extension: getExtension(contentType) as string,
-            },
-            revalidate: maxAge,
-          };
-        },
-        {}
+    parsedUrl: UrlWithParsedQuery,
+    paramsResult?: ImageParamsResult
+  ): Promise<PixelResponse> {
+    const internalParamsResult =
+      paramsResult ??
+      ImageOptimizerCache.validateParams(
+        req,
+        parsedUrl.query,
+        this.nextConfig,
+        false
       );
 
-      if (cacheEntry?.value?.kind !== 'IMAGE') {
-        throw new Error(
-          'invariant did not get entry from image response cache'
-        );
-      }
+    if ('errorMessage' in internalParamsResult) {
+      return { error: internalParamsResult.errorMessage, statusCode: 400 };
+    }
 
-      sendResponse(
+    try {
+      return nextImageOptimizer(
         req,
         res,
-        paramsResult.href,
-        cacheEntry.value.extension,
-        cacheEntry.value.buffer,
-        paramsResult.isStatic,
-        cacheEntry.isMiss ? 'MISS' : cacheEntry.isStale ? 'STALE' : 'HIT',
-        this.nextConfig.images.contentSecurityPolicy
+        internalParamsResult,
+        this.nextConfig,
+        this.requestHandler
       );
     } catch (error) {
       if (error instanceof ImageError) {
-        res.statusCode = error.statusCode;
-        res.end(error.message);
         return {
-          finished: true,
+          error: error.message,
+          statusCode: error.statusCode,
         };
       }
 
+      // Unhandled error
       throw error;
     }
-
-    return {
-      originCacheControl,
-      finished: true,
-    };
   }
 }
 

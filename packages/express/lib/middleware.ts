@@ -2,6 +2,21 @@ import * as http from 'http';
 import { parse as parseUrl } from 'url';
 
 import { Pixel, PixelOptions } from '@millihq/pixel-core';
+import {
+  ImageOptimizerCache,
+  sendResponse,
+  getHash,
+} from 'next/dist/server/image-optimizer';
+import ResponseCache from 'next/dist/server/response-cache';
+import { getExtension } from 'next/dist/server/serve-static';
+
+/* -----------------------------------------------------------------------------
+ * Types
+ * ---------------------------------------------------------------------------*/
+
+type PixelMiddlewareOptions = {
+  distDir?: string;
+} & PixelOptions;
 
 type NextFunction = {
   (err?: any): void;
@@ -29,10 +44,21 @@ type MiddlewareFunction = (
  * @param options
  * @returns
  */
-function middlewareInitializer(options: PixelOptions): MiddlewareFunction {
-  const pixel = new Pixel(options);
+function middlewareInitializer({
+  distDir = '/tmp',
+  ...pixelOptions
+}: PixelMiddlewareOptions): MiddlewareFunction {
+  const pixel = new Pixel(pixelOptions);
+  const imageResponseCache = new ResponseCache(
+    new ImageOptimizerCache({
+      distDir,
+      nextConfig: pixel.nextConfig,
+    })
+  );
 
   return async (req, res, next) => {
+    const { nextConfig } = pixel;
+
     if (typeof req.url !== 'string') {
       return next(
         new Error(
@@ -41,10 +67,66 @@ function middlewareInitializer(options: PixelOptions): MiddlewareFunction {
       );
     }
 
+    const parsedUrl = parseUrl(req.url, true);
+    const paramsResult = ImageOptimizerCache.validateParams(
+      req,
+      parsedUrl.query,
+      nextConfig,
+      false
+    );
+
     try {
-      // res.end() is called internally so no need to call next() after the
-      // image optimizer is finished.
-      await pixel.imageOptimizer(req, res, parseUrl(req.url, true));
+      if ('errorMessage' in paramsResult) {
+        throw new Error(paramsResult.errorMessage);
+      }
+
+      const cacheKey = ImageOptimizerCache.getCacheKey(paramsResult);
+
+      const cacheEntry = await imageResponseCache.get(
+        cacheKey,
+        async () => {
+          const pixelResponse = await pixel.imageOptimizer(
+            req,
+            res,
+            parsedUrl,
+            paramsResult
+          );
+          if ('error' in pixelResponse) {
+            throw new Error(pixelResponse.error);
+          }
+
+          const { buffer, contentType, maxAge } = pixelResponse;
+          const etag = getHash([buffer]);
+
+          return {
+            value: {
+              kind: 'IMAGE',
+              buffer,
+              etag,
+              extension: getExtension(contentType) as string,
+            },
+            revalidate: maxAge,
+          };
+        },
+        {}
+      );
+
+      if (cacheEntry?.value?.kind !== 'IMAGE') {
+        throw new Error(
+          'invariant did not get entry from image response cache'
+        );
+      }
+
+      sendResponse(
+        req,
+        res,
+        paramsResult.href,
+        cacheEntry.value.extension,
+        cacheEntry.value.buffer,
+        paramsResult.isStatic,
+        cacheEntry.isMiss ? 'MISS' : cacheEntry.isStale ? 'STALE' : 'HIT',
+        nextConfig.images.contentSecurityPolicy
+      );
     } catch (error) {
       next(error);
     }
