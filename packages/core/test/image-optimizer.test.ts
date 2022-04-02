@@ -205,13 +205,7 @@ describe('image-optimizer core', () => {
         q: '75',
       });
 
-      async function listener(req: IncomingMessage, res: ServerResponse) {
-        // Risk tolerable since it is used in test environment
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        const url = parseUrl(req.url!, true);
-        await pixel.imageOptimizer(req, res, url);
-      }
-      const server = http.createServer(listener);
+      const server = http.createServer(generateListener(pixel));
 
       const response = await request(server)
         .get(`/?${optimizerParams.toString()}`)
