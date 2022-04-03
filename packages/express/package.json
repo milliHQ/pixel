@@ -1,6 +1,6 @@
 {
   "name": "@millihq/pixel-express",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "main": "./dist/middleware.js",
   "types": "./dist/middleware.d.ts",
   "license": "Apache-2.0",

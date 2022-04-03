@@ -1,6 +1,6 @@
 {
   "name": "@millihq/pixel-core",
-  "version": "4.0.1",
+  "version": "4.1.0",
   "main": "./dist/image-optimizer.js",
   "types": "./dist/image-optimizer.d.ts",
   "license": "Apache-2.0",

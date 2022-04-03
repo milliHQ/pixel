@@ -1,5 +1,9 @@
 # Changelog of Pixel Core
 
+## 4.1.0 (April 03, 2022)
+
+- Return `paramsResult` from pixel core
+
 ## 4.0.1 (April 03, 2022)
 
 - Fixes wrong dependency in `@millihq/pixel-express`
