@@ -1,5 +1,9 @@
 # Changelog of Pixel Core
 
+## 4.0.1 (April 03, 2022)
+
+- Fixes wrong dependency in `@millihq/pixel-express`
+
 ## 4.0.0 (April 03, 2022)
 
 - Removes caching from `@millihq/pixel-core`
