@@ -31,6 +31,7 @@ type PixelResponse =
       buffer: Buffer;
       contentType: string;
       maxAge: number;
+      paramsResult: ImageParamsResult;
     }
   | {
       error: string;
@@ -113,13 +114,18 @@ class Pixel {
     }
 
     try {
-      return nextImageOptimizer(
+      const imageOptimizerResult = await nextImageOptimizer(
         req,
         res,
         internalParamsResult,
         this.nextConfig,
         this.requestHandler
       );
+
+      return {
+        ...imageOptimizerResult,
+        paramsResult: internalParamsResult,
+      };
     } catch (error) {
       if (error instanceof ImageError) {
         return {

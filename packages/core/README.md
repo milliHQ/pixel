@@ -45,7 +45,17 @@ const pixel = new Pixel({
 
 async function listener(req: IncomingMessage, res: ServerResponse) {
   const url = parseUrl(req.url!, true);
-  await pixel.imageOptimizer(req, res, url);
+  const result = await pixel.imageOptimizer(req, res, url);
+
+  if ('error' in result) {
+    res.statusCode = result.statusCode;
+    res.end(result.error);
+    return;
+  }
+
+  res.setHeader('Content-Type', result.contentType);
+  res.setHeader('Cache-Control', `public, max-age=${result.maxAge}`);
+  res.end(result.buffer);
 }
 
 const server = http.createServer(listener);
