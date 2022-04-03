@@ -1,5 +1,10 @@
 # Changelog of Pixel Core
 
+## 4.0.0 (April 03, 2022)
+
+- Removes caching from `@millihq/pixel-core`
+- Adds caching to `@millihq/pixel-express`
+
 ## 3.0.0 (March 31, 2022)
 
 - Adds support for Next.js versions `>= 12.1.0`.  
