@@ -53,7 +53,8 @@ function middlewareInitializer({
     new ImageOptimizerCache({
       distDir,
       nextConfig: pixel.nextConfig,
-    })
+    }),
+    true
   );
 
   return async (req, res, next) => {
