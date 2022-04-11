@@ -49,7 +49,7 @@ describe('image-optimizer core', () => {
    * -------------------------------------------------------------------------*/
   test.each([
     // inputFilename | outputContentType
-    ['avif/test.avif', 'image/avif'],
+    ['avif/test.avif', 'image/jpeg'],
     ['bmp/test.bmp', 'image/bmp'],
     ['gif/test.gif', 'image/gif'],
     ['gif/animated.gif', 'image/gif'],
@@ -57,7 +57,7 @@ describe('image-optimizer core', () => {
     ['png/test.png', 'image/png'],
     ['svg/test.svg', 'image/svg+xml'],
     ['tiff/test.tiff', 'image/tiff'],
-    ['webp/test.webp', 'image/webp'],
+    ['webp/test.webp', 'image/jpeg'],
     ['webp/animated.webp', 'image/webp'],
   ])(
     'Accept all: %s should convert to %s',
