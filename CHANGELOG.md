@@ -1,5 +1,9 @@
 # Changelog of Pixel Core
 
+## 4.2.0 (April 11, 2022)
+
+- Ensure compatibility with Next.js 12.1.1
+
 ## 4.1.0 (April 03, 2022)
 
 - Return `paramsResult` from pixel core
