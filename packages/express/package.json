@@ -19,6 +19,9 @@
   "dependencies": {
     "@millihq/pixel-core": "^4.0.0"
   },
+  "peerDependencies": {
+    "next": ">=12.1.1"
+  },
   "devDependencies": {
     "@types/express": "^4.17.13",
     "@types/mime-types": "^2.1.1",
