@@ -12,7 +12,6 @@ import {
   defaultConfig,
   NextConfigComplete,
 } from 'next/dist/server/config-shared';
-import nodeFetch from 'node-fetch';
 
 /* -----------------------------------------------------------------------------
  * Types
@@ -60,10 +59,12 @@ type PixelOptions = {
  * ---------------------------------------------------------------------------*/
 
 // Polyfill for fetch that is used by nextImageOptimizer
-// https://github.com/vercel/next.js/blob/canary/packages/next/server/image-optimizer.ts#L223
-
-// @ts-ignore
-global.fetch = nodeFetch;
+// If we are Node.js 18+ where fetch is available we don't need the polyfill.
+// https://github.com/vercel/next.js/blob/canary/packages/next/src/server/image-optimizer.ts#L529
+if (global.fetch === undefined) {
+  // @ts-ignore - Our types are still Node.js 14
+  global.fetch = require('node-fetch');
+}
 
 /* -----------------------------------------------------------------------------
  * Pixel
