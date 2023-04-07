@@ -16,7 +16,7 @@
     "prepack": "cp ../../LICENSE ../../CHANGELOG.md ./",
     "postpack": "rm ./LICENSE ./CHANGELOG.md"
   },
-  "dependencies": {
+  "optionalDependencies": {
     "node-fetch": "^2.0.0"
   },
   "peerDependencies": {

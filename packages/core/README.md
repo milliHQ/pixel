@@ -16,6 +16,17 @@ npm i @millihq/pixel-core next react react-dom        # squoosh
 npm i @millihq/pixel-core next react react-dom sharp  # sharp
 ```
 
+### `fetch` usage
+
+Under the hood, Next.js needs global `fetch` available to request the image from the original source.
+The module polyfills it with `node-fetch` if it is not available.
+
+If you are using a Node.js version `< 18` you should also add it as peer dependency:
+
+```sh
+npm i node-fetch
+```
+
 ## Usage
 
 Pixel can be integrated with the standard Node.js HTTP request and response model.
