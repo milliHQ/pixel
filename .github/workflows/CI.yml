@@ -92,7 +92,7 @@ jobs:
 
       # git user is required (bot not used) by release-it
       - name: Set git user to GitHub Actions
-        uses: fregante/setup-git-user@v1.0.1
+        uses: fregante/setup-git-user@v2
 
       - name: npm authentication
         env:
