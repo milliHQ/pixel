@@ -12,18 +12,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
-      - name: Cache
-        uses: actions/cache@v2
+      - name: Setup Node
+        uses: actions/setup-node@v3
         with:
-          path: |
-            .yarn
-            **/node_modules
-          key: ${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          node-version-file: '.nvmrc'
+          cache: 'yarn'
 
       - name: Install Dependencies
-        run: yarn --frozen-lockfile --cache-folder .yarn
+        run: yarn --frozen-lockfile
 
       - name: Lint Prettier
         run: yarn lint:prettier
