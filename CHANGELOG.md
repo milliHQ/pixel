@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+- Add support for Next.js 13+
+- `node-fetch` is now an optional dependency  
+  (it is not required if you are using an environment that has native `fetch` available)
+
 ## [4.3.0] - 2023-04-07
 
 - Ensure compatibility with Next.js 12.2.0+
