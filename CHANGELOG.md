@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [4.3.0] - 2023-04-07
+
 - Ensure compatibility with Next.js 12.2.0+
 - Minimum required Node.js version increased from 12 to 14
 
