@@ -10,9 +10,13 @@
     "lint:eslint": "eslint .",
     "fix:eslint": "eslint . --fix",
     "lint:prettier": "prettier --check .",
-    "fix:prettier": "prettier --write ."
+    "fix:prettier": "prettier --write .",
+    "release": "release-it",
+    "release:ci": "release-it --no-increment --no-git.push --ci"
   },
   "devDependencies": {
+    "@release-it-plugins/workspaces": "^3.2.0",
+    "@release-it/keep-a-changelog": "^3.1.0",
     "@tsconfig/node14": "^1.0.3",
     "@types/jest": "^27.0.2",
     "@types/tmp": "^0.2.3",
@@ -24,6 +28,7 @@
     "jest": "^27.3.1",
     "jest-file-snapshot": "^0.5.0",
     "prettier": "^2.4.1",
+    "release-it": "^15.10.1",
     "tmp": "^0.2.1",
     "ts-jest": "^27.0.7",
     "turbo": "^1.8.8",
@@ -31,5 +36,19 @@
   },
   "resolutions": {
     "@types/node": "^14.0.0"
+  },
+  "release-it": {
+    "git": {
+      "commitMessage": "v${version}",
+      "tagName": "v${version}"
+    },
+    "npm": false,
+    "plugins": {
+      "@release-it-plugins/workspaces": true,
+      "@release-it/keep-a-changelog": {
+        "filename": "CHANGELOG.md",
+        "addUnreleased": true
+      }
+    }
   }
 }
