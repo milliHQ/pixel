@@ -126,7 +126,9 @@ function middlewareInitializer({
         cacheEntry.value.buffer,
         paramsResult.isStatic,
         cacheEntry.isMiss ? 'MISS' : cacheEntry.isStale ? 'STALE' : 'HIT',
-        nextConfig.images.contentSecurityPolicy
+        nextConfig.images.contentSecurityPolicy,
+        cacheEntry.revalidate || 0,
+        false
       );
     } catch (error) {
       next(error);

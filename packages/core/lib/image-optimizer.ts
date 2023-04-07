@@ -89,6 +89,7 @@ class Pixel {
           ...defaultImageConfig,
           ...options.imageConfig,
         } ?? defaultImageConfig,
+      experimental: {},
     } as unknown as NextConfigComplete;
 
     this.requestHandler = options.requestHandler;
