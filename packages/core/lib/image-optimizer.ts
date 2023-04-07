@@ -120,6 +120,7 @@ class Pixel {
         res,
         internalParamsResult,
         this.nextConfig,
+        false,
         this.requestHandler
       );
 
