@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+- Add support for Next.js `13.3+`
+
 ## [5.0.0] - 2023-04-07
 
 - Add support for Next.js 13+
