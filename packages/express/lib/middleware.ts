@@ -49,13 +49,11 @@ function middlewareInitializer({
   ...pixelOptions
 }: PixelMiddlewareOptions): MiddlewareFunction {
   const pixel = new Pixel(pixelOptions);
-  const imageResponseCache = new ResponseCache(
-    new ImageOptimizerCache({
-      distDir,
-      nextConfig: pixel.nextConfig,
-    }),
-    true
-  );
+  const imageResponseCache = new ResponseCache(true);
+  const imageOptimizerCache = new ImageOptimizerCache({
+    distDir,
+    nextConfig: pixel.nextConfig,
+  });
 
   return async (req, res, next) => {
     const { nextConfig } = pixel;
@@ -109,7 +107,7 @@ function middlewareInitializer({
             revalidate: maxAge,
           };
         },
-        {}
+        { incrementalCache: imageOptimizerCache }
       );
 
       if (cacheEntry?.value?.kind !== 'IMAGE') {
@@ -126,7 +124,7 @@ function middlewareInitializer({
         cacheEntry.value.buffer,
         paramsResult.isStatic,
         cacheEntry.isMiss ? 'MISS' : cacheEntry.isStale ? 'STALE' : 'HIT',
-        nextConfig.images.contentSecurityPolicy,
+        nextConfig.images,
         cacheEntry.revalidate || 0,
         false
       );
