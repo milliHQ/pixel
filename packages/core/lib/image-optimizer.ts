@@ -66,6 +66,14 @@ if (global.fetch === undefined) {
   global.fetch = require('node-fetch');
 }
 
+// Polyfill for Headers that is used by MockedResponse
+// If we are Node.js 18+ where Headers is available we don't need the polyfill.
+// https://github.com/vercel/next.js/blob/canary/packages/next/src/server/lib/mock-request.ts#L122
+if (global.Headers === undefined) {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  global.Headers = require('node-fetch').Headers;
+}
+
 /* -----------------------------------------------------------------------------
  * Pixel
  * ---------------------------------------------------------------------------*/
