@@ -28,7 +28,7 @@
     "@types/node-fetch": "^2.0.0",
     "@types/supertest": "^2.0.11",
     "mime-types": "^2.1.33",
-    "next": "13.3.0",
+    "next": "13.3.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "sharp": "^0.32.0",
